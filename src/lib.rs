@@ -11,25 +11,17 @@ pub struct Config {
 impl Config {
     
     pub fn new(mut args: std::env::Args) -> Result<Config, &'static str>  {
-        if args.len() != 4 {
+        if args.len() < 3 {
             return Err("not enough arguments");
         }
         args.next();
         let primordials = match args.next() {
-            Some(arg) => {
-                let temp: Vec<&str> = arg.split(",").collect();
-                let temp: Vec<f32> = temp.into_iter().map(|i| i.parse::<f32>().expect("parameter1 parse to f32 fault")).collect();
-                temp
-            },
+            Some(arg) => { convert_arg_str(&arg).expect("parameter1 parse to [f32] fault") },
             None => return Err("Didn't get a primordials arg"),
         };
 
         let anticipations = match args.next() {
-            Some(arg) => {
-                let temp: Vec<&str> = arg.split(",").collect();
-                let temp: Vec<f32> = temp.into_iter().map(|i| i.parse::<f32>().expect("parameter2 parse to f32 fault")).collect();
-                temp
-            },
+            Some(arg) => { convert_arg_str(&arg).expect("parameter2 parse to [f32] fault") },
             None => return Err("Didn't get a anticipations arg"),
         };
 
@@ -37,17 +29,20 @@ impl Config {
             Some(arg) => arg.parse::<f32>().expect("parameter3 parse to f32 fault"),
             None => return Err("Didn't get a anticipations value"),
         };
-        println!("primordials={:?}, anticipations={:?}, value={}", primordials, anticipations, value);
+        // println!("primordials={:?}, anticipations={:?}, value={}", primordials, anticipations, value);
 
         Ok(Config { primordials , anticipations, value })
     }
 
 }
 
-pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    Ok(())
+pub fn run(config: Config) -> Result<f32, Box<dyn Error>> {
+    let result = process(&config.primordials, &config.anticipations, config.value);
+    Ok(result)
 }
 
+
+// 拉格朗日插值计算核心函数
 pub fn process(primoridals: &[f32], anticipations: &[f32], currentValue: f32) -> f32 {
     let primoridalsCount = primoridals.len();
     if primoridalsCount != anticipations.len() {
@@ -67,6 +62,18 @@ pub fn process(primoridals: &[f32], anticipations: &[f32], currentValue: f32) ->
         result += temp;
     }
     result
+}
+
+fn remove_whitespace(s: &str) -> String {
+    s.chars().filter(|c| !c.is_whitespace()).collect()
+}
+
+fn convert_arg_str(arg: &str) -> Result<Vec<f32>, Box<dyn Error>> {
+    let temp: Vec<&str> = arg.split(",").collect();
+    let temp: Vec<f32> = temp.into_iter().map(|i| 
+        remove_whitespace(i).parse::<f32>().expect("convert arg to f32 fault")
+    ).collect();
+    Ok(temp)
 }
 
 

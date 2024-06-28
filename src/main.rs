@@ -11,11 +11,13 @@ fn main() {
         process::exit(1);
     });
 
-    if let Err(e) = lagrangeInterpolation::run(config) {
-        eprintln!("Application error: {}", e);
-        process::exit(1);
+    match lagrangeInterpolation::run(config)  {
+        Ok(result) => println!("Result is: {}", result),
+        Err(err) => {
+            eprintln!("Application error: {}", err);
+            process::exit(1);
+        }
     }
-
 
 }
 
